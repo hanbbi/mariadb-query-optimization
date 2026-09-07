@@ -1,0 +1,26 @@
+services:
+  mariadb:
+    image: mariadb:10.11
+    container_name: qopt-mariadb
+    restart: unless-stopped
+    environment:
+      MARIADB_ROOT_PASSWORD: rootpw
+      MARIADB_DATABASE: qopt
+    ports:
+      - "3307:3306"          # 로컬 3307 -> 컨테이너 3306 (기존 MySQL과 충돌 방지)
+    command:
+      - --local-infile=1     # LOAD DATA LOCAL INFILE 허용 (대량 적재용)
+      - --innodb-buffer-pool-size=1G
+    volumes:
+      - qopt-data:/var/lib/mysql
+
+volumes:
+  qopt-data:
+
+# 사용법:
+#   docker compose up -d
+#   docker exec -i qopt-mariadb mariadb -uroot -prootpw qopt < sql/01_schema.sql
+#
+# 실무에서는 MariaDB 10.3을 사용했고, 여기 기법(ANALYZE FORMAT=JSON, INPLACE 인덱스,
+# 트리거+배치 요약 테이블)은 10.3 이상에서 동일하게 동작합니다. 재현 편의를 위해 현재
+# LTS인 10.11을 기본값으로 두었습니다.
